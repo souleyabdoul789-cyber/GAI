@@ -1,72 +1,44 @@
 name: Build GAI Android APK
 
 on:
-  push:
-    branches: [main]
-  workflow_dispatch:
+push:
+branches:
+- main
+workflow_dispatch:
 
 permissions:
-  contents: read
+contents: read
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
+build:
+runs-on: ubuntu-latest
 
-    steps:
-      - name: Récupérer le code
-        uses: actions/checkout@v4
+steps:
+  - name: Recuperer le code
+    uses: actions/checkout@v4
 
-      - name: Installer Java 17
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: '17'
+  - name: Installer Java
+    uses: actions/setup-java@v4
+    with:
+      distribution: temurin
+      java-version: '17'
 
-      - name: Configurer Android SDK
-        uses: android-actions/setup-android@v3
+  - name: Configurer Android SDK
+    uses: android-actions/setup-android@v3
 
-      - name: Accepter les licences Android
-        run: yes | sdkmanager --licenses || true
+  - name: Installer les composants Android
+    run: |
+      yes | sdkmanager --licenses || true
+      sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.0"
 
-      - name: Installer le SDK requis
-        run: sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.0"
+  - name: Compiler APK debug
+    run: |
+      chmod +x gradlew
+      ./gradlew assembleDebug
 
-      - name: Compiler l'APK debug
-        run: chmod +x gradlew && ./gradlew assembleDebug
-
-      - name: Publier l'APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: GAI-debug-apk
-          path: app/build/outputs/apk/debug/*.apk
-          if-no-files-found: error
-
-**Attention :** cette correction règle le problème d'interactivité, mais il faudra vérifier la compilation réelle. Le `|| true` ne doit pas servir à ignorer des licences indispensables : si l'installation du SDK échoue, le workflow doit s'arrêter.
-
-### 2. Enregistre et pousse la correction
-
-Dans Nano :
-
-- `CTRL + O` pour enregistrer.
-- `Entrée` pour confirmer.
-- `CTRL + X` pour quitter.
-
-Puis :
-
-```bash
-git add .github/workflows/build.yml
-git commit -m "Fix Android SDK license setup"
-git push
-
-3. Relance la compilation
-
-Sur GitHub :
-
-1. Ouvre ton dépôt.
-2. Va dans Actions.
-3. Ouvre le nouveau workflow.
-4. Vérifie l'étape Compiler l'APK debug.
-
-Si elle échoue, envoie-moi les dernières lignes de l'erreur, particulièrement celles qui contiennent "FAILURE: Build failed", "What went wrong" ou "Could not resolve".
-
-Nous corrigerons alors le véritable problème de compilation.
+  - name: Publier APK
+    uses: actions/upload-artifact@v4
+    with:
+      name: GAI-debug-apk
+      path: app/build/outputs/apk/debug/*.apk
+      if-no-files-found: error
