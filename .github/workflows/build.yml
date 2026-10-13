@@ -1,44 +1,44 @@
 name: Build GAI Android APK
 
 on:
-push:
-branches:
-- main
-workflow_dispatch:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
 
 permissions:
-contents: read
+  contents: read
 
 jobs:
-build:
-runs-on: ubuntu-latest
+  build:
+    runs-on: ubuntu-latest
 
-steps:
-  - name: Recuperer le code
-    uses: actions/checkout@v4
+    steps:
+      - name: Recuperer le code
+        uses: actions/checkout@v4
 
-  - name: Installer Java
-    uses: actions/setup-java@v4
-    with:
-      distribution: temurin
-      java-version: '17'
+      - name: Installer Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
 
-  - name: Configurer Android SDK
-    uses: android-actions/setup-android@v3
+      - name: Configurer Android SDK
+        uses: android-actions/setup-android@v3
 
-  - name: Installer les composants Android
-    run: |
-      yes | sdkmanager --licenses || true
-      sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.0"
+      - name: Installer les composants Android
+        run: |
+          yes | sdkmanager --licenses
+          sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.0"
 
-  - name: Compiler APK debug
-    run: |
-      chmod +x gradlew
-      ./gradlew assembleDebug
+      - name: Compiler APK debug
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug
 
-  - name: Publier APK
-    uses: actions/upload-artifact@v4
-    with:
-      name: GAI-debug-apk
-      path: app/build/outputs/apk/debug/*.apk
-      if-no-files-found: error
+      - name: Publier APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: GAI-debug-apk
+          path: app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
